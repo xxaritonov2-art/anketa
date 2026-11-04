@@ -171,8 +171,7 @@ input.text:focus{border-bottom-color:var(--ink)}
 .i4 .track i{width:8px;height:8px;border-radius:50%;background:var(--ink);opacity:.18;animation:dotin .3s ease both}
 .i4 .track .ln{width:18px;height:1.5px;background:var(--ink);opacity:.18;animation:optin .3s ease 1s both}
 .i4 .track .gf{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:var(--sky);border:1.5px solid var(--ink);font-size:18px;margin-left:2px;animation:tagin .5s cubic-bezier(.2,1.5,.35,1) 1.1s both}
-.i4 .end{font-weight:400;font-size:16px;color:var(--muted);animation:optin .5s cubic-bezier(.2,.8,.2,1) .45s both}
-.i4 .prize{font-weight:500;font-size:22px;letter-spacing:-.02em;line-height:1.15;max-width:320px;margin-top:4px;animation:optin .5s cubic-bezier(.2,.8,.2,1) .55s both}
+.i4 .end{font-weight:400;font-size:17px;line-height:1.45;color:var(--muted);max-width:340px;margin:0;animation:optin .5s cubic-bezier(.2,.8,.2,1) .45s both}
 .i4 .next{margin-top:34px}
 .i3 .from{display:flex;align-items:center;gap:12px;margin-bottom:28px;animation:optin .5s cubic-bezier(.2,.8,.2,1) both}
 .i3 .me{width:56px;height:56px;border-radius:50%;overflow:hidden;border:1.5px solid var(--ink)}
@@ -181,7 +180,7 @@ input.text:focus{border-bottom-color:var(--ink)}
 .i3 .from span{font-size:13px;color:var(--muted)}
 .i3 h1{font-size:31px;line-height:1.06;max-width:330px}
 .i3 .sub{font-weight:500;font-size:19px;letter-spacing:-.02em;line-height:1.25;margin:14px 0 0;max-width:300px;text-wrap:balance;animation:optin .5s cubic-bezier(.2,.8,.2,1) .3s both}
-.i3 .thanks{font-size:15px;margin-top:10px;animation-delay:.45s}
+.i3 .thanks{font-weight:400;font-size:16px;letter-spacing:0;margin-top:12px;animation-delay:.45s}
 .subwrap{position:relative;display:flex;justify-content:center}
 .arrow{position:absolute;right:-30px;top:-34px;width:58px;height:66px;overflow:visible;pointer-events:none}
 .arrow path{fill:none;stroke:var(--ink);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
@@ -446,7 +445,7 @@ function intro(){
   if(IV===3&&i===-2){
     const h=el("div","hero"),me=el("div","me");me.appendChild(img());h.appendChild(me);
     h.appendChild(el("span","tg t1","семён"));h.appendChild(el("span","tg t2","автор системы"));c.appendChild(h);
-    c.appendChild(titleEl("хочу сделать выдающийся продукт."));
+    c.appendChild(titleEl("хочу сделать выдающийся продукт!"));
     const sw=el("div","subwrap");sw.appendChild(el("p","sub","но это получится сделать только вместе с вами!"));
     sw.insertAdjacentHTML("beforeend",'<svg class="arrow" viewBox="0 0 70 80" aria-hidden="true"><path class="a1" d="M58 4c4 14 2 30-8 42-7 9-18 15-31 18"/><path class="a2" d="M27 54c-4 4-8 7-12 10 5 1 10 3 14 6"/></svg>');
     c.appendChild(sw);
@@ -459,8 +458,7 @@ function intro(){
     c.appendChild(el("div","big-cap","простых вопросов"));
     const t=el("div","track");for(let k=0;k<10;k++){const x=el("i");x.style.animationDelay=(0.45+k*0.05)+"s";t.appendChild(x)}
     t.appendChild(el("span","ln"));t.appendChild(el("span","gf","🎁"));c.appendChild(t);
-    c.appendChild(el("div","end","и в конце ты получишь"));
-    {const z=el("div","prize");z.innerHTML="промокод<br>на персональные условия";c.appendChild(z)}
+    {const z=el("p","end");z.innerHTML="и в конце ты получишь промокод<br>на персональные условия";c.appendChild(z)}
   }
   const b=el("button","next",IV===3?(i===-2?"начать":"поехали"):"Начать");b.id="start";b.onclick=()=>go(1);c.appendChild(b);
   return c;
