@@ -163,10 +163,17 @@ input.text:focus{border-bottom-color:var(--ink)}
 .i3 .hero .t1{left:-34px;top:8px;transform:rotate(-7deg);animation-delay:.35s}
 .i3 .hero .t2{right:-46px;bottom:6px;transform:rotate(5deg);animation-delay:.5s}
 .i3 .hero .t1{--r:-7deg}.i3 .hero .t2{--r:5deg}
-.i4 h1{font-size:34px;line-height:1.06;max-width:320px;margin-top:8vh}
-.i4 .sub{font-weight:500;font-size:19px;letter-spacing:-.02em;line-height:1.5;margin:16px 0 0;max-width:300px;text-wrap:balance;animation:optin .5s cubic-bezier(.2,.8,.2,1) .3s both}
-.i4 .hl{display:inline-block;margin-top:8px;background:var(--sky);border:1.5px solid var(--ink);border-radius:22px;padding:6px 16px;line-height:1.3;text-wrap:balance}
-.i4 .dots{margin:30px 0 14px}
+.i4{padding-top:7vh}
+.i4 .ey{font-weight:400;font-size:15px;color:var(--muted);letter-spacing:.01em;animation:optin .5s cubic-bezier(.2,.8,.2,1) both}
+.i4 .big{font-weight:500;font-size:132px;line-height:.86;letter-spacing:-.06em;margin:6px 0 0;animation:avain .7s cubic-bezier(.2,1.4,.35,1) .1s both}
+.i4 .big-cap{font-weight:500;font-size:24px;letter-spacing:-.02em;line-height:1.1;margin-top:10px;animation:optin .5s cubic-bezier(.2,.8,.2,1) .25s both}
+.i4 .track{display:flex;align-items:center;gap:7px;margin:34px 0 30px}
+.i4 .track i{width:8px;height:8px;border-radius:50%;background:var(--ink);opacity:.18;animation:dotin .3s ease both}
+.i4 .track .ln{width:18px;height:1.5px;background:var(--ink);opacity:.18;animation:optin .3s ease 1s both}
+.i4 .track .gf{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:var(--sky);border:1.5px solid var(--ink);font-size:18px;margin-left:2px;animation:tagin .5s cubic-bezier(.2,1.5,.35,1) 1.1s both}
+.i4 .end{font-weight:400;font-size:16px;color:var(--muted);animation:optin .5s cubic-bezier(.2,.8,.2,1) .45s both}
+.i4 .prize{font-weight:500;font-size:22px;letter-spacing:-.02em;line-height:1.15;max-width:320px;margin-top:4px;animation:optin .5s cubic-bezier(.2,.8,.2,1) .55s both}
+.i4 .next{margin-top:34px}
 .i3 .from{display:flex;align-items:center;gap:12px;margin-bottom:28px;animation:optin .5s cubic-bezier(.2,.8,.2,1) both}
 .i3 .me{width:56px;height:56px;border-radius:50%;overflow:hidden;border:1.5px solid var(--ink)}
 .i3 .from div{text-align:left}
@@ -447,10 +454,13 @@ function intro(){
   }
   if(IV===3&&i===-1){
     c.className="card intro i4";
-    c.appendChild(titleEl("всего 10 простых вопросов"));
-    const l=el("p","sub");l.appendChild(document.createTextNode("и в конце ты получишь "));l.appendChild(el("span","hl","промокод на персональные условия"));c.appendChild(l);
-    const d=el("div","dots");for(let k=0;k<10;k++){const x=el("i");x.style.animationDelay=(0.5+k*0.05)+"s";d.appendChild(x)}
-    const g=el("span","gift","🎁 промокод");g.style.animationDelay="1.05s";d.appendChild(g);c.appendChild(d);
+    c.appendChild(el("div","ey","всего"));
+    c.appendChild(el("div","big","10"));
+    c.appendChild(el("div","big-cap","простых вопросов"));
+    const t=el("div","track");for(let k=0;k<10;k++){const x=el("i");x.style.animationDelay=(0.45+k*0.05)+"s";t.appendChild(x)}
+    t.appendChild(el("span","ln"));t.appendChild(el("span","gf","🎁"));c.appendChild(t);
+    c.appendChild(el("div","end","и в конце ты получишь"));
+    {const z=el("div","prize");z.innerHTML="промокод<br>на персональные условия";c.appendChild(z)}
   }
   const b=el("button","next",IV===3?(i===-2?"начать":"поехали"):"Начать");b.id="start";b.onclick=()=>go(1);c.appendChild(b);
   return c;
