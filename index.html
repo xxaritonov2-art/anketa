@@ -138,6 +138,7 @@ input.text:focus{border-bottom-color:var(--ink)}
 .i1 .ph img,.i2 .ph img,.i3 .me img{width:100%;height:100%;object-fit:cover;display:block}
 .i1 .tag{margin:-18px 0 22px;position:relative;background:var(--sky);border:1.5px solid var(--ink);border-radius:999px;padding:6px 14px;font-weight:500;font-size:14px;transform:rotate(-4deg);animation:tagin .5s cubic-bezier(.2,1.5,.35,1) .35s both}
 @keyframes tagin{from{opacity:0;transform:rotate(-12deg) scale(.5)}}
+@keyframes tagin2{from{opacity:0;transform:rotate(calc(var(--r) - 10deg)) scale(.5)}}
 @keyframes avain{from{opacity:0;transform:scale(.6)}}
 .path{display:flex;align-items:center;justify-content:center;gap:10px;margin:26px 0 4px;animation:optin .5s cubic-bezier(.2,.8,.2,1) .55s both;flex-wrap:wrap}
 .path .st{display:flex;flex-direction:column;align-items:center;gap:2px}
@@ -155,6 +156,17 @@ input.text:focus{border-bottom-color:var(--ink)}
 .line{margin:22px 0 0;font-weight:500;font-size:16px;line-height:1.7;max-width:320px;animation:optin .5s cubic-bezier(.2,.8,.2,1) .55s both}
 .line .hl{background:var(--sky);border:1.5px solid var(--ink);border-radius:999px;padding:3px 10px;white-space:nowrap}
 /* 3 · Письмо */
+/* 3 · Письмо v2: фото-кругляш по центру, подписи-пилюли */
+.i3 .hero{position:relative;width:172px;height:172px;margin:6px 0 34px}
+.i3 .hero .me{width:172px;height:172px;border-radius:50%;overflow:hidden;border:1.5px solid var(--ink);animation:avain .7s cubic-bezier(.2,1.4,.35,1) both}
+.i3 .hero .tg{position:absolute;background:var(--sky);border:1.5px solid var(--ink);border-radius:999px;padding:6px 14px;font-weight:500;font-size:15px;white-space:nowrap;animation:tagin2 .5s cubic-bezier(.2,1.5,.35,1) both}
+.i3 .hero .t1{left:-34px;top:8px;transform:rotate(-7deg);animation-delay:.35s}
+.i3 .hero .t2{right:-46px;bottom:6px;transform:rotate(5deg);animation-delay:.5s}
+.i3 .hero .t1{--r:-7deg}.i3 .hero .t2{--r:5deg}
+.i4 h1{font-size:34px;line-height:1.06;max-width:320px;margin-top:8vh}
+.i4 .sub{font-weight:500;font-size:19px;letter-spacing:-.02em;line-height:1.5;margin:16px 0 0;max-width:300px;text-wrap:balance;animation:optin .5s cubic-bezier(.2,.8,.2,1) .3s both}
+.i4 .hl{display:inline-block;margin-top:8px;background:var(--sky);border:1.5px solid var(--ink);border-radius:22px;padding:6px 16px;line-height:1.3;text-wrap:balance}
+.i4 .dots{margin:30px 0 14px}
 .i3 .from{display:flex;align-items:center;gap:12px;margin-bottom:28px;animation:optin .5s cubic-bezier(.2,.8,.2,1) both}
 .i3 .me{width:56px;height:56px;border-radius:50%;overflow:hidden;border:1.5px solid var(--ink)}
 .i3 .from div{text-align:left}
@@ -257,7 +269,7 @@ function showPill(text,cb){
   setTimeout(()=>{p.classList.remove("show");p.classList.add("hide")},hold);
   setTimeout(()=>{p.className="pill";p.innerHTML="";document.body.classList.remove("gone-top");pillBusy=false;cb&&cb()},hold+260);
 }
-let V="d", i=-1, dir=1, sound=true, ctx=null;
+let V="d", i=-2, dir=1, sound=true, ctx=null;
 const A={};
 const $=id=>document.getElementById(id);
 const el=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e};
@@ -424,17 +436,23 @@ function intro(){
     c.appendChild(titleEl("Качество продукта напрямую зависит от твоих ответов"));c.appendChild(thanks());
     const l=el("p","line");l.appendChild(document.createTextNode("Всего 10 вопросов, а в конце "));l.appendChild(el("span","hl","промокод на особые условия"));c.appendChild(l);
   }
-  if(IV===3){
-    const f=el("div","from"),me=el("div","me");me.appendChild(img());f.appendChild(me);const t=el("div");t.appendChild(el("b",null,"семён харитонов"));t.appendChild(el("span",null,"автор системы"));f.appendChild(t);c.appendChild(f);
-    c.appendChild(titleEl("хочу сделать действительно классный продукт!"));
-    const sw=el("div","subwrap");sw.appendChild(el("p","sub","и его качество напрямую зависит от твоих ответов"));
+  if(IV===3&&i===-2){
+    const h=el("div","hero"),me=el("div","me");me.appendChild(img());h.appendChild(me);
+    h.appendChild(el("span","tg t1","семён"));h.appendChild(el("span","tg t2","автор системы"));c.appendChild(h);
+    c.appendChild(titleEl("хочу сделать выдающийся продукт."));
+    const sw=el("div","subwrap");sw.appendChild(el("p","sub","но это получится сделать только вместе с вами!"));
     sw.insertAdjacentHTML("beforeend",'<svg class="arrow" viewBox="0 0 70 80" aria-hidden="true"><path class="a1" d="M58 4c4 14 2 30-8 42-7 9-18 15-31 18"/><path class="a2" d="M27 54c-4 4-8 7-12 10 5 1 10 3 14 6"/></svg>');
     c.appendChild(sw);
-    c.appendChild(el("p","thanks","спасибо тебе заранее 🤍"));
+    c.appendChild(el("p","thanks","спасибо за честность! 🤍"));
+  }
+  if(IV===3&&i===-1){
+    c.className="card intro i4";
+    c.appendChild(titleEl("всего 10 простых вопросов"));
+    const l=el("p","sub");l.appendChild(document.createTextNode("и в конце ты получишь "));l.appendChild(el("span","hl","промокод на персональные условия"));c.appendChild(l);
     const d=el("div","dots");for(let k=0;k<10;k++){const x=el("i");x.style.animationDelay=(0.5+k*0.05)+"s";d.appendChild(x)}
     const g=el("span","gift","🎁 промокод");g.style.animationDelay="1.05s";d.appendChild(g);c.appendChild(d);
   }
-  const b=el("button","next",IV===3?"начать":"Начать");b.id="start";b.onclick=()=>go(1);c.appendChild(b);
+  const b=el("button","next",IV===3?(i===-2?"начать":"поехали"):"Начать");b.id="start";b.onclick=()=>go(1);c.appendChild(b);
   return c;
 }
 function mount(){
@@ -445,7 +463,7 @@ function mount(){
   if(V==="c"&&i===Math.floor(Q.length/2)){const m=$("mile");m.textContent="Половина пути";m.classList.add("show");setTimeout(()=>m.classList.remove("show"),1800)}
 }
 function go(d){
-  const nx=i+d;if(nx<-1||nx>=Q.length)return;
+  const nx=i+d;if(nx<-2||nx>=Q.length)return;
   const s=$("stage"),old=s.firstElementChild;dir=d;if(d>0)sNext();
   if(s.classList.contains("gone")){i=nx;mount();window.scrollTo(0,0);return}
   if(old){old.classList.add(d>0?"out":"outback");setTimeout(()=>{i=nx;mount();window.scrollTo(0,0)},240)}else{i=nx;mount()}
