@@ -60,7 +60,8 @@
   .next:disabled{opacity:.25;cursor:default}
   .done{text-align:center;padding-top:12vh}
   .done .big{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:18px}
-  .done .hint{margin-top:6px}
+  .done .hint{margin-top:18px;max-width:300px;margin-left:auto;margin-right:auto}
+  .promo{display:inline-block;margin-top:14px;padding:14px 26px;border:1px solid var(--ink);border-radius:999px;font-weight:500;font-size:24px;letter-spacing:.06em;user-select:all}
   .foot{margin-top:auto;padding-top:40px;text-align:center;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 </style>
 </head>
@@ -78,8 +79,10 @@
 </div>
 
 <script>
-// ЕДИНСТВЕННОЕ, что меняется при настройке: адрес входящего вебхука ChatPlace
-const WEBHOOK_URL = "__WEBHOOK_URL__";
+// Куда уходят ответы. Пустая строка = отправка выключена.
+const SHEET_URL   = "";   // Google Таблица (Apps Script)
+const WEBHOOK_URL = "";   // ChatPlace (входящий вебхук)
+const PROMO = "KARUSELI20";
 
 const Q = [
   {key:"role", type:"one", title:"Кто ты?", opts:["Эксперт или специалист","Свой бизнес","Блогер, личный бренд","Веду соцсети клиентам","Только начинаю"]},
@@ -95,7 +98,9 @@ const Q = [
 ];
 
 const params = new URLSearchParams(location.search);
-const clientId = params.get("cid") || params.get("clientId") || "";
+const clean = v => (v && !/\{\{/.test(v)) ? v : "";
+const clientId = clean(params.get("cid") || params.get("clientId"));
+const username = clean(params.get("u")).replace(/^@/,"");
 const A = {}; let i = 0;
 const $ = id => document.getElementById(id);
 
@@ -174,7 +179,7 @@ $("back").onclick = ()=>{ if(i>0){ i--; render(); } };
 function payload(){
   const pains = [...(A.pains||[])]; if(A.pains_own) pains.push("Своё: "+A.pains_own);
   return {
-    clientId, role:A.role||"", followers:A.followers||"",
+    clientId, username, role:A.role||"", followers:A.followers||"",
     goals:(A.goals||[]).join(", "), pains:pains.join(", "),
     formats:(A.formats||[]).join(", "), carousel_time:A.carousel_time||"",
     need:A.need||"", device:A.device||"", email:A.email||"", phone:A.phone||""
@@ -183,10 +188,12 @@ function payload(){
 
 async function submit(btn, err){
   btn.disabled = true; btn.textContent = "Отправляю…"; err.textContent="";
-  const body = new URLSearchParams(payload());
+  const data = payload();
+  const targets = [SHEET_URL, WEBHOOK_URL].filter(Boolean);
   try{
-    // no-cors + form-urlencoded: запрос доходит до ChatPlace без CORS-preflight
-    await fetch(WEBHOOK_URL, {method:"POST", mode:"no-cors", body});
+    // no-cors + form-urlencoded: запросы доходят без CORS-preflight
+    await Promise.all(targets.map(u => fetch(u, {method:"POST", mode:"no-cors", body:new URLSearchParams(data)})));
+    try{ localStorage.setItem("anketa_sent","1"); }catch(e){}
     done();
   }catch(e){
     btn.disabled=false; btn.textContent="Забронировать место";
@@ -199,8 +206,9 @@ function done(){
   const s=$("screen"); s.innerHTML="";
   const card=el("div","card done");
   card.appendChild(el("div","big","Место забронировано"));
-  card.appendChild(el("h1",null, clientId ? "Готово, промокод уже у тебя в Telegram" : "Готово"));
-  card.appendChild(el("p","hint", clientId ? "Загляни в чат с ботом" : "Чтобы получить промокод, открой анкету по кнопке «Занять место» в боте"));
+  card.appendChild(el("h1",null,"Твой промокод"));
+  const code=el("div","promo",PROMO); card.appendChild(code);
+  card.appendChild(el("p","hint","Сделай скриншот и не потеряй. По нему получишь особые условия, когда я открою доступ к системе. Ссылку пришлю в бот."));
   s.appendChild(card);
 }
 
