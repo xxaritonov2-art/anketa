@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Бронь места</title>
+<meta name="robots" content="noindex">
+<link rel="preload" href="fonts/stolzl-medium.woff2" as="font" type="font/woff2" crossorigin>
+
+<style>
+  @font-face{font-family:Stolzl;src:url(fonts/stolzl-book.woff2) format("woff2");font-weight:400;font-display:swap}
+  @font-face{font-family:Stolzl;src:url(fonts/stolzl-medium.woff2) format("woff2");font-weight:500;font-display:swap}
+  :root{
+    --bg:#ede6da; --ink:#1f1c18; --muted:#8a8072; --line:#d6ccbc;
+    --field:#f5f0e8; --sel:#1f1c18; --selInk:#f5f0e8;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%}
+  body{
+    background:var(--bg);color:var(--ink);
+    font-family:Stolzl,system-ui,sans-serif;font-size:16px;line-height:1.4;
+    display:flex;justify-content:center;min-height:100dvh;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{width:100%;max-width:440px;padding:28px 24px 32px;display:flex;flex-direction:column;min-height:100dvh}
+  .top{display:flex;align-items:center;gap:16px;margin-bottom:48px}
+  .back{border:0;background:none;font:inherit;font-size:18px;color:var(--ink);padding:0;width:20px;cursor:pointer;visibility:hidden}
+  .back.show{visibility:visible}
+  .prog{flex:1;display:flex;align-items:center;gap:14px}
+  .bar{flex:1;height:1px;background:var(--line);position:relative}
+  .bar i{position:absolute;left:0;top:0;height:1px;background:var(--ink);width:0;transition:width .4s ease}
+  .prog-label{font-size:12px;letter-spacing:.06em;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .card{animation:in .4s ease}
+  @keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  h1{font-family:Stolzl,system-ui,sans-serif;font-weight:500;font-size:30px;line-height:1.08;letter-spacing:-.03em;margin:0 0 10px}
+  .hint{color:var(--muted);font-size:14px;margin:0 0 28px}
+  .opts{display:flex;flex-direction:column;gap:8px}
+  .opt{
+    text-align:left;font:inherit;font-weight:500;letter-spacing:-.01em;font-size:15px;color:var(--ink);
+    background:transparent;border:1px solid var(--line);border-radius:999px;padding:14px 20px;
+    cursor:pointer;transition:background .2s,border-color .2s,color .2s;
+    display:flex;align-items:center;gap:12px;
+  }
+  .opt:active{opacity:.7}
+  .opt .box{flex:none;width:16px;height:16px;border:1px solid var(--muted);border-radius:50%;display:grid;place-items:center;font-size:10px}
+  .opt.sel{background:var(--sel);color:var(--selInk);border-color:var(--sel)}
+  .opt.sel .box{border-color:var(--selInk)}
+  .opt.sel .box::after{content:"";width:6px;height:6px;border-radius:50%;background:var(--selInk)}
+  input.text{
+    width:100%;font:inherit;font-size:16px;padding:14px 0;border:0;border-bottom:1px solid var(--line);
+    background:transparent;color:var(--ink);outline:none;margin-top:8px;border-radius:0
+  }
+  input.text::placeholder{color:#b3a999}
+  input.text:focus{border-bottom-color:var(--ink)}
+  .err{color:#a5432f;font-size:13px;min-height:18px;margin-top:10px}
+  .next{
+    margin-top:28px;width:100%;font:inherit;font-weight:500;font-size:15px;letter-spacing:.01em;
+    background:var(--ink);color:var(--selInk);border:0;border-radius:999px;padding:16px;cursor:pointer;transition:opacity .2s
+  }
+  .next:disabled{opacity:.25;cursor:default}
+  .done{text-align:center;padding-top:12vh}
+  .done .big{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:18px}
+  .done .hint{margin-top:6px}
+  .foot{margin-top:auto;padding-top:40px;text-align:center;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top" id="top">
+    <button class="back" id="back" aria-label="Назад">←</button>
+    <div class="prog">
+      <div class="bar"><i id="pbar"></i></div>
+      <div class="prog-label" id="plabel"></div>
+    </div>
+  </div>
+  <div id="screen"></div>
+  <div class="foot">Ранний доступ</div>
+</div>
+
+<script>
+// ЕДИНСТВЕННОЕ, что меняется при настройке: адрес входящего вебхука ChatPlace
+const WEBHOOK_URL = "__WEBHOOK_URL__";
+
+const Q = [
+  {key:"role", type:"one", title:"Кто ты?", opts:["Эксперт или специалист","Свой бизнес","Блогер, личный бренд","Веду соцсети клиентам","Только начинаю"]},
+  {key:"followers", type:"one", title:"Сколько у тебя подписчиков?", opts:["До 1 000","1–10 тыс.","10–50 тыс.","Больше 50 тыс."]},
+  {key:"goals", type:"many", title:"Чего ты хочешь от блога?", hint:"Можно выбрать несколько", opts:["Клиентов и продажи","Личный бренд, чтобы узнавали","Рост охватов","Зарабатывать на самом блоге","Просто нравится делиться"]},
+  {key:"pains", type:"many", own:true, title:"Что больше всего болит сейчас в блоге?", hint:"Можно выбрать несколько", opts:["Нет времени на контент","Начинаю выкладывать и бросаю","Долго собираю карусели","Долго монтирую видео","Не люблю или не умею сниматься","Посты выглядят как шаблон, как у всех","С нейросетями выходит пластиково, видно, что AI","Трачу часы, а охватов нет","Блог не приносит заявок","Не знаю, о чём писать","Выгорел, нет сил на контент"]},
+  {key:"formats", type:"many", title:"Какие форматы ты сейчас делаешь?", hint:"Можно выбрать несколько", opts:["Карусели","Reels","Сторис","Почти ничего не выкладываю"]},
+  {key:"carousel_time", type:"one", title:"Сколько уходит на одну карусель?", opts:["До 30 минут","30–60 минут","1–2 часа","Больше 2 часов","Не делаю: долго или сложно"]},
+  {key:"need", type:"one", title:"Насколько тебе сейчас нужна система, которая собирает карусели из твоих фото за 5–10 минут?", opts:["Очень, это моя главная проблема","Нужна, сэкономит кучу времени","Интересно попробовать","Мне больше нужно видео, чем карусели","Пока не нужна"]},
+  {key:"device", type:"one", title:"На чём работаешь?", opts:["iPhone + Mac","iPhone + Windows","Android + компьютер","Только телефон"]},
+  {key:"email", type:"input", title:"Твоя почта", hint:"Пришлю туда доступ, чтобы ничего не потерялось", input:{type:"email",placeholder:"name@mail.com",autocomplete:"email",inputmode:"email"}},
+  {key:"phone", type:"input", title:"Номер телефона", hint:"С кодом страны", input:{type:"tel",placeholder:"+7 900 000-00-00",autocomplete:"tel",inputmode:"tel"}}
+];
+
+const params = new URLSearchParams(location.search);
+const clientId = params.get("cid") || params.get("clientId") || "";
+const A = {}; let i = 0;
+const $ = id => document.getElementById(id);
+
+function progress(){
+  $("plabel").textContent = (i+1) + " из " + Q.length;
+  $("pbar").style.width = ((i+1)/Q.length*100) + "%";
+  $("back").classList.toggle("show", i>0);
+}
+function el(tag, cls, text){ const e=document.createElement(tag); if(cls) e.className=cls; if(text!=null) e.textContent=text; return e; }
+
+function render(){
+  progress();
+  const q = Q[i], s = $("screen"); s.innerHTML="";
+  const card = el("div","card");
+  card.appendChild(el("h1",null,q.title));
+  card.appendChild(el("p","hint",q.hint || (q.type==="one" ? "Выбери один вариант" : "")));
+
+  if(q.type==="one"){
+    const box = el("div","opts");
+    q.opts.forEach(o=>{
+      const b = el("button","opt"+(A[q.key]===o?" sel":""),o);
+      b.onclick = ()=>{ A[q.key]=o; [...box.children].forEach(c=>c.classList.remove("sel")); b.classList.add("sel"); setTimeout(next,220); };
+      box.appendChild(b);
+    });
+    card.appendChild(box);
+  }
+
+  if(q.type==="many"){
+    const cur = new Set(A[q.key]||[]);
+    const box = el("div","opts");
+    const btn = el("button","next","Дальше");
+    let own;
+    const upd = ()=>{ btn.disabled = cur.size===0 && !(own && own.value.trim()); };
+    q.opts.forEach(o=>{
+      const b = el("button","opt"+(cur.has(o)?" sel":""));
+      b.appendChild(el("span","box")); b.appendChild(el("span",null,o));
+      b.onclick = ()=>{ cur.has(o)?cur.delete(o):cur.add(o); b.classList.toggle("sel"); upd(); };
+      box.appendChild(b);
+    });
+    card.appendChild(box);
+    if(q.own){
+      own = el("input","text"); own.placeholder="Своё: напиши, что болит"; own.value=A[q.key+"_own"]||"";
+      own.oninput=upd; card.appendChild(own);
+    }
+    btn.onclick = ()=>{ A[q.key]=[...cur]; if(own) A[q.key+"_own"]=own.value.trim(); next(); };
+    upd(); card.appendChild(btn);
+  }
+
+  if(q.type==="input"){
+    const inp = el("input","text");
+    Object.assign(inp, q.input); inp.value = A[q.key]||"";
+    const err = el("div","err");
+    const last = i===Q.length-1;
+    const btn = el("button","next", last ? "Забронировать место" : "Дальше");
+    const go = ()=>{
+      const v = inp.value.trim(), e = validate(q.key, v);
+      if(e){ err.textContent=e; return; }
+      A[q.key]=v; last ? submit(btn, err) : next();
+    };
+    btn.onclick = go; inp.onkeydown = ev=>{ if(ev.key==="Enter") go(); };
+    card.appendChild(inp); card.appendChild(err); card.appendChild(btn);
+    setTimeout(()=>inp.focus(),300);
+  }
+  s.appendChild(card);
+}
+
+function validate(k,v){
+  if(!v) return "Это поле обязательное";
+  if(k==="email" && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)) return "Проверь почту, кажется, в ней опечатка";
+  if(k==="phone" && v.replace(/\D/g,"").length<8) return "Проверь номер, в нём мало цифр";
+  return "";
+}
+function next(){ if(i<Q.length-1){ i++; render(); window.scrollTo(0,0); } }
+$("back").onclick = ()=>{ if(i>0){ i--; render(); } };
+
+function payload(){
+  const pains = [...(A.pains||[])]; if(A.pains_own) pains.push("Своё: "+A.pains_own);
+  return {
+    clientId, role:A.role||"", followers:A.followers||"",
+    goals:(A.goals||[]).join(", "), pains:pains.join(", "),
+    formats:(A.formats||[]).join(", "), carousel_time:A.carousel_time||"",
+    need:A.need||"", device:A.device||"", email:A.email||"", phone:A.phone||""
+  };
+}
+
+async function submit(btn, err){
+  btn.disabled = true; btn.textContent = "Отправляю…"; err.textContent="";
+  const body = new URLSearchParams(payload());
+  try{
+    // no-cors + form-urlencoded: запрос доходит до ChatPlace без CORS-preflight
+    await fetch(WEBHOOK_URL, {method:"POST", mode:"no-cors", body});
+    done();
+  }catch(e){
+    btn.disabled=false; btn.textContent="Забронировать место";
+    err.textContent="Не получилось отправить. Проверь интернет и нажми ещё раз.";
+  }
+}
+
+function done(){
+  $("pbar").style.width="100%"; $("plabel").textContent="Готово"; $("back").classList.remove("show");
+  const s=$("screen"); s.innerHTML="";
+  const card=el("div","card done");
+  card.appendChild(el("div","big","Место забронировано"));
+  card.appendChild(el("h1",null, clientId ? "Готово, промокод уже у тебя в Telegram" : "Готово"));
+  card.appendChild(el("p","hint", clientId ? "Загляни в чат с ботом" : "Чтобы получить промокод, открой анкету по кнопке «Занять место» в боте"));
+  s.appendChild(card);
+}
+
+render();
+</script>
+</body>
+</html>
