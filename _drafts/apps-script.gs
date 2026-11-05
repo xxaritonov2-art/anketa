@@ -8,7 +8,18 @@ function doPost(e) {
   const lock = LockService.getScriptLock();
   lock.waitLock(20000);
   try {
-    const p = (e && e.parameter) || {};
+    // анкета шлёт ответы простым текстом вида key=value&key2=value2 — разбираем их сами
+    const p = Object.assign({}, (e && e.parameter) || {});
+    const raw = e && e.postData && e.postData.contents;
+    if (raw && raw.indexOf('=') > 0) {
+      raw.split('&').forEach(pair => {
+        const k = pair.indexOf('=');
+        if (k < 1) return;
+        const key = decodeURIComponent(pair.slice(0, k).replace(/\+/g, ' '));
+        const val = decodeURIComponent(pair.slice(k + 1).replace(/\+/g, ' '));
+        if (!(key in p) || p[key] === '') p[key] = val;
+      });
+    }
     const clean = v => {
       v = String(v || '').slice(0, 2000);
       return /^[=+\-@]/.test(v) ? "'" + v : v; // телефон «+7…» и защита от формул

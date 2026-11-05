@@ -561,11 +561,14 @@ function payload(){
     formats:(A.formats||[]).join(", "),carousel_time:A.carousel_time||"",need:why,device:A.device||"",email:A.email||"",phone:A.phone||"",
     ai_level:A.ai_level||"",ai_tools:aiTools.join(", "),life:A.life||"",price:A.price||"",pay_format:A.pay_format||""};
 }
+// ответы уходят простым текстом (key=value&…): такой запрос Google принимает надёжно
 function post(data){
+  const body=new URLSearchParams(data).toString();
   [SHEET_URL,WEBHOOK_URL].filter(Boolean).forEach(u=>{
-    const body=new URLSearchParams(data);let ok=false;
-    try{ok=navigator.sendBeacon&&navigator.sendBeacon(u,body)}catch(e){}
-    if(!ok)fetch(u,{method:"POST",mode:"no-cors",keepalive:true,body}).catch(()=>{});
+    const beacon=()=>{try{return navigator.sendBeacon&&navigator.sendBeacon(u,new Blob([body],{type:"text/plain;charset=utf-8"}))}catch(e){return false}};
+    try{
+      fetch(u,{method:"POST",mode:"no-cors",credentials:"omit",keepalive:true,headers:{"Content-Type":"text/plain;charset=utf-8"},body}).catch(()=>beacon());
+    }catch(e){beacon()}
   });
 }
 // все ответы уходят сразу после телефона: анкета сохранится, даже если человек закроет шаг про интервью
