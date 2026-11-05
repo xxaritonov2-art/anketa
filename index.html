@@ -121,6 +121,19 @@ textarea.text:focus{border-color:var(--ink)}
 .foot{transition:opacity .35s}
 #confetti{position:fixed;inset:0;pointer-events:none;z-index:30}
 
+/* шаг «и последний штрих»: интервью за ×2 */
+.iv .hero{position:relative;width:156px;height:156px;margin:14px 0 30px}
+.iv .hero .me{width:156px;height:156px;border-radius:50%;overflow:hidden;border:1.5px solid var(--ink);animation:avain .7s cubic-bezier(.2,1.4,.35,1) both}
+.iv .hero .me img{width:100%;height:100%;object-fit:cover;display:block}
+.iv .x2{position:absolute;right:-34px;top:-8px;width:72px;height:72px;border-radius:50%;background:var(--ink);color:var(--paper);display:grid;place-items:center;font-weight:500;font-size:28px;letter-spacing:-.04em;transform:rotate(10deg);box-shadow:0 6px 0 -1px var(--sky),0 6px 0 .5px var(--ink);animation:x2in .6s cubic-bezier(.2,1.4,.35,1) .55s both}
+@keyframes x2in{0%{opacity:0;transform:rotate(-30deg) scale(.3)}70%{transform:rotate(14deg) scale(1.12)}100%{opacity:1;transform:rotate(10deg) scale(1)}}
+.iv h1{font-size:30px;max-width:330px}
+.ivsub{font-weight:400;font-size:18px;letter-spacing:-.01em;line-height:1.3;margin:14px 0 0;max-width:320px;text-wrap:balance;animation:optin .5s cubic-bezier(.2,.8,.2,1) .3s both}
+.ivopts{width:100%;display:flex;flex-direction:column;gap:8px;margin-top:30px}
+.ivopts .next{margin-top:0;font-size:16px;animation:optin .45s cubic-bezier(.2,.8,.2,1) .6s both}
+.ivopts .opt{justify-content:center;font-size:16px;padding:16px 20px;animation-delay:.68s}
+.ivfine{font-size:13px;color:var(--muted);margin:12px 0 0;animation:optin .45s ease .8s both}
+@media (max-width:370px){.iv h1{font-size:26px}.iv .x2{right:-18px}}
 /* финал */
 .done{text-align:center;padding-top:8vh}
 .done .eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:16px}
@@ -250,8 +263,11 @@ const Q=[
  {key:"price",type:"price",title:"Сколько ты был(а) бы готов(а) заплатить за такой инструмент?",hint:"Если бы он действительно помогал тебе быстрее создавать контент и экономить время",formats:["Разовая покупка","Подписка"],cover:"price"},
  {key:"device",type:"one",title:"На чём работаешь?",opts:["iPhone + Mac","iPhone + Windows","Android + компьютер","Только телефон"],cover:"device"},
  {key:"email",type:"input",title:"Твоя почта",hint:"Пришлю туда доступ, чтобы ничего не потерялось",input:{type:"email",placeholder:"name@mail.com",autocomplete:"email",inputMode:"email",id:"f-email"},cover:"mail"},
- {key:"phone",type:"input",title:"Номер телефона",hint:"С кодом страны",input:{type:"tel",placeholder:"+7 900 000-00-00",autocomplete:"tel",inputMode:"tel",id:"f-phone"},cover:"phone"}
+ {key:"phone",type:"input",title:"Номер телефона",hint:"С кодом страны",input:{type:"tel",placeholder:"+7 900 000-00-00",autocomplete:"tel",inputMode:"tel",id:"f-phone"},cover:"phone"},
+ {key:"interview",type:"interview",extra:true,title:"хочу удвоить твои особые условия",sub:"если выйдешь на созвон с моей командой и дашь интервью на 40 минут",yes:"да, хочу ×2",no:"нет, не хочу"}
 ];
+const QN=Q.filter(q=>!q.extra).length; // сколько «настоящих» вопросов показываем на старте
+const SID=Date.now().toString(36)+Math.random().toString(36).slice(2,8); // id этой анкеты, чтобы дописать ответ про интервью в ту же строку
 
 /* реакции: [эмодзи, заголовок, подпись] */
 const R={
@@ -276,14 +292,14 @@ const P={
 };
 let pillT1,pillT2;
 let pillBusy=false;
-function showPill(text,cb){
+function showPill(text,cb,more){
   if(pillBusy)return;pillBusy=true;
   const p=$("pill"),s=$("stage"),reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
   s.classList.add("gone");document.body.classList.add("gone-top");
   p.className="pill";p.innerHTML="";
   text.split(" ").forEach((w,k)=>{const x=el("span","pw",w);x.style.animationDelay=(0.08+k*0.035)+"s";p.appendChild(x);p.appendChild(document.createTextNode(" "))});
   setTimeout(()=>{void p.offsetWidth;p.classList.add("show");sPill();buzz(10)},reduce?0:150);
-  const hold=reduce?900:150+450+Math.min(800,300+text.length*13);
+  const hold=(reduce?900:150+450+Math.min(800,300+text.length*13))+(more||0);
   setTimeout(()=>{p.classList.remove("show");p.classList.add("hide")},hold);
   setTimeout(()=>{p.className="pill";p.innerHTML="";document.body.classList.remove("gone-top");pillBusy=false;cb&&cb()},hold+260);
 }
@@ -357,8 +373,9 @@ function animateCounter(){const t=document.querySelector("#cnt");if(!t)return;le
 function progress(){
   document.querySelector(".bar").style.visibility=i<0?"hidden":"visible";
   if(i<0){$("plabel").textContent="";$("pbar").style.width="0";$("back").classList.remove("show");return}
-  $("plabel").textContent=(i+1)+" из "+Q.length;
-  $("pbar").style.width=((i+1)/Q.length*100)+"%";
+  if(Q[i].extra){$("plabel").textContent="✨";$("pbar").style.width="100%";$("back").classList.toggle("show",true);return}
+  $("plabel").textContent=(i+1)+" из "+QN;
+  $("pbar").style.width=((i+1)/QN*100)+"%";
   $("back").classList.toggle("show",i>0);
 }
 function titleEl(t){
@@ -368,6 +385,7 @@ function titleEl(t){
 }
 function build(){
   const q=Q[i],card=el("div","card");
+  if(q.type==="interview")return buildInterview(q,card);
   if(V==="b"||V==="d"){const c=el("div","cover");c.innerHTML=slow(COV[q.cover]||"");card.appendChild(c)}
   card.appendChild(titleEl(q.title));
   card.appendChild(el("p","hint",q.hint||(q.type==="one"?"Выбери один вариант":"")));
@@ -447,8 +465,10 @@ function build(){
 
   if(q.type==="input"){
     const inp=el("input","text");Object.assign(inp,q.input);inp.value=A[q.key]||"";
-    const err=el("div","err"),last=i===Q.length-1,btn=el("button","next",last?"Забронировать место":"Дальше");
-    const go2=()=>{const v=inp.value.trim(),e=validate(q.key,v);if(e){err.textContent=e;buzz([20,40,20]);return}A[q.key]=v;last?submit(btn,err):go(1)};
+    const err=el("div","err"),last=i===QN-1,btn=el("button","next","Дальше");
+    const go2=()=>{const v=inp.value.trim(),e=validate(q.key,v);if(e){err.textContent=e;buzz([20,40,20]);return}A[q.key]=v;
+      if(!last){go(1);return}
+      sendMain();showPill("и последний штрих ✨",()=>go(1),300)};
     btn.onclick=go2;inp.onkeydown=ev=>{if(ev.key==="Enter")go2()};
     card.appendChild(inp);card.appendChild(err);card.appendChild(btn);
     setTimeout(()=>inp.focus({preventScroll:true}),450);
@@ -482,13 +502,13 @@ function intro(){
     c.appendChild(titleEl("Качество продукта напрямую зависит от твоих ответов"));c.appendChild(thanks());
     const p=el("div","path");
     const st=(b,s)=>{const x=el("div","st");x.appendChild(el("b",null,b));x.appendChild(el("span",null,s));return x};
-    p.appendChild(st(String(Q.length),"вопросов"));p.appendChild(el("span","ar","→"));p.appendChild(st("2","минуты"));p.appendChild(el("span","ar","→"));p.appendChild(el("span","gift","🎁 промокод"));
+    p.appendChild(st(String(QN),"вопросов"));p.appendChild(el("span","ar","→"));p.appendChild(st("2","минуты"));p.appendChild(el("span","ar","→"));p.appendChild(el("span","gift","🎁 промокод"));
     c.appendChild(p);
   }
   if(IV===2){
     const ph=el("div","ph"),im=el("div","im");im.appendChild(img());ph.appendChild(im);ph.appendChild(el("div","cap","Семён · @xxaritonovw"));ph.appendChild(el("span","stk","спасибо 🤍"));c.appendChild(ph);
     c.appendChild(titleEl("Качество продукта напрямую зависит от твоих ответов"));c.appendChild(thanks());
-    const l=el("p","line");l.appendChild(document.createTextNode("Всего "+Q.length+" вопросов, а в конце "));l.appendChild(el("span","hl","промокод на особые условия"));c.appendChild(l);
+    const l=el("p","line");l.appendChild(document.createTextNode("Всего "+QN+" вопросов, а в конце "));l.appendChild(el("span","hl","промокод на особые условия"));c.appendChild(l);
   }
   if(IV===3&&i===-2){
     const h=el("div","hero"),me=el("div","me");me.appendChild(img());h.appendChild(me);
@@ -502,9 +522,9 @@ function intro(){
   if(IV===3&&i===-1){
     c.className="card intro i4";
     c.appendChild(el("div","ey","всего"));
-    c.appendChild(el("div","big",String(Q.length)));
+    c.appendChild(el("div","big",String(QN)));
     c.appendChild(el("div","big-cap","простых вопросов"));
-    const t=el("div","track");for(let k=0;k<Q.length;k++){const x=el("i");x.style.animationDelay=(0.45+k*0.04)+"s";t.appendChild(x)}
+    const t=el("div","track");for(let k=0;k<QN;k++){const x=el("i");x.style.animationDelay=(0.45+k*0.04)+"s";t.appendChild(x)}
     t.appendChild(el("span","ln"));t.appendChild(el("span","gf","🎁"));c.appendChild(t);
     {const z=el("p","end");z.innerHTML="и в конце ты получишь промокод<br>на персональные условия";c.appendChild(z)}
   }
@@ -541,22 +561,40 @@ function payload(){
     formats:(A.formats||[]).join(", "),carousel_time:A.carousel_time||"",need:why,device:A.device||"",email:A.email||"",phone:A.phone||"",
     ai_level:A.ai_level||"",ai_tools:aiTools.join(", "),life:A.life||"",price:A.price||"",pay_format:A.pay_format||""};
 }
-let sent=false;
-function submit(btn,err){
-  if(sent)return;sent=true;btn.disabled=true;
-  const data=payload();
+function post(data){
   [SHEET_URL,WEBHOOK_URL].filter(Boolean).forEach(u=>{
     const body=new URLSearchParams(data);let ok=false;
     try{ok=navigator.sendBeacon&&navigator.sendBeacon(u,body)}catch(e){}
     if(!ok)fetch(u,{method:"POST",mode:"no-cors",keepalive:true,body}).catch(()=>{});
   });
-  finish();
+}
+// все ответы уходят сразу после телефона: анкета сохранится, даже если человек закроет шаг про интервью
+let sent=false;
+function sendMain(){if(sent)return;sent=true;post(Object.assign(payload(),{sid:SID,interview:"не ответил"}))}
+// ответ про интервью дописывается в ту же строку таблицы по SID
+let sentI=false;
+function sendInterview(ans){if(sentI)return;sentI=true;sendMain();post({sid:SID,update:"interview",interview:ans,clientId,username})}
+function buildInterview(q,card){
+  card.className="card intro iv";
+  const h=el("div","hero"),me=el("div","me"),m=new Image();m.alt="Семён";m.src=PHOTO;me.appendChild(m);h.appendChild(me);
+  h.appendChild(el("span","x2","×2"));card.appendChild(h);
+  card.appendChild(titleEl(q.title));
+  card.appendChild(el("p","ivsub",q.sub));
+  const box=el("div","ivopts"),y=el("button","next ivyes",q.yes),n=el("button","opt ivno",q.no);
+  y.id="iv-yes";n.id="iv-no";
+  const pick=(yes)=>{if(sentI)return;y.disabled=n.disabled=true;(yes?y:n).classList.add("pop");sTap();buzz(8);
+    A.interview=yes?"Да":"Нет";sendInterview(A.interview);
+    showPill(yes?"моя команда напишет тебе в Telegram, чтобы договориться о времени 📞":"окей, без проблем 🤍",finish,yes?1200:0)};
+  y.onclick=()=>pick(true);n.onclick=()=>pick(false);
+  box.appendChild(y);box.appendChild(n);card.appendChild(box);
+  card.appendChild(el("p","ivfine","промокод ты получишь в любом случае"));
+  return card;
 }
 function finish(){
   $("pbar").style.width="100%";$("plabel").textContent="Готово";$("back").classList.remove("show");
   const s=$("stage"),old=s.firstElementChild;if(old)old.classList.add("out");
   setTimeout(()=>{
-    s.innerHTML="";const c=el("div","card done in");
+    s.classList.remove("gone");s.innerHTML="";const c=el("div","card done in");
     c.appendChild(el("div","eyebrow","Место забронировано"));
     c.appendChild(titleEl("Твой промокод"));
     const p=el("div","promo");c.appendChild(p);
